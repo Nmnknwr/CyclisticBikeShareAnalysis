@@ -16,7 +16,7 @@ library("geosphere")
 library("gridExtra") 
 library("ggmap")
 
-getwd() #displays your working directory
+getwd() 
 setwd("/Users/namankanwar/Case Studys/CyclisticBikeShareAnalysis/Data/CSVs")
 
 #=====================
