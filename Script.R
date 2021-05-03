@@ -332,7 +332,7 @@ MasterTrip_Dump_clean %>%
 
 # Count of rides, Average ride duration - per Starting Station - overall
 MasterTrip_Dump_clean %>%
-  group_by(start_station_name) %>% 
+  group_by(start_station_id,start_station_name) %>% 
   summarise(Rides = n(), Avg_Ride_time = mean(Ride_Time)/60) %>% 
   arrange(desc(Rides))
 
@@ -375,13 +375,9 @@ MasterTrip_Dump_clean %>%
   group_by(gender) %>% 
   summarise(Average_age = mean(2021-birthyear,na.rm=TRUE))
 
-
-
-
-
 # Plots
 
-# Count of rides - per customer type over time - line -- shows seasonality
+# Count of rides per customer type over time - line -- shows seasonality
 MasterTrip_Dump_clean %>% 
   group_by(Date,member_casual) %>% 
   summarise(Rides =  n()) %>% 
@@ -513,6 +509,26 @@ MasterTrip_Dump_clean %>%
   geom_point() +
   geom_line()
 
+# Average age of members per gender per year
+MasterTrip_Dump_clean %>% 
+  filter(member_casual!="Casual" & gender != "NA") %>%
+  group_by(Year,gender) %>% 
+  summarise(Average_age = mean(2021-birthyear,na.rm=TRUE)) %>% 
+  ggplot(aes(x=Year,y=Average_age,group=gender,color=gender)) +
+  geom_point() +
+  geom_line()
+
+# % split of Member gender per year
+MasterTrip_Dump_clean %>% 
+  group_by(Year) %>% 
+  filter(member_casual!="Casual" & gender != "NA") %>%
+  summarise(Male = (sum(gender=="Male")/n())*100,
+            Female = (sum(gender=="Female")/n()*100)) %>% 
+  gather(key = gender, value = Perc_Share,Male,Female) %>% 
+  ggplot(aes(x=Year,y=Perc_Share,group=gender,color=gender)) +
+  geom_point() +
+  geom_line() 
+  
 
 ###################################################################################
 ##ROUGH
