@@ -20,7 +20,7 @@ getwd()
 setwd("/Users/namankanwar/Case Studys/CyclisticBikeShareAnalysis/Data/CSVs")
 
 #=====================
-# DATA Loading and collection
+# DATA Loading and collection 
 #=====================
 # Uploading Raw Divvy datasets (csv files) for 2018 to 2021 March
 q1_2021_01 <- read_csv("202101-divvy-tripdata.csv")
