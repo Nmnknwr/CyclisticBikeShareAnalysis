@@ -17,7 +17,7 @@ library("gridExtra")
 library("ggmap")
 
 getwd()
-setwd("I:/Work/Datasets/Cyclistic/CSVs")
+setwd("I:/Work/Datasets/Cyclistic/CSVs")vv
 
 #=====================
 # DATA Loading and collection 
