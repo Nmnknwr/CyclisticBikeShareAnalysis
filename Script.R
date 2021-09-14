@@ -492,7 +492,8 @@ MasterTrip_Dump_clean %>%
   summarise(Ratio = sum(member_casual=="Member")/sum(member_casual=="Casual")) %>% 
   ggplot(aes(x=Year,y=Ratio,group=1)) +
   geom_point() +
-  geom_line()
+  geom_line() +
+  labs(title = "Member/Causal Rides Ratio per Year",x="Year",y="Member/Causal Rides Ratio")
 
 # Member to causal Rides ratio per month
 MasterTrip_Dump_clean %>% 
@@ -500,7 +501,9 @@ MasterTrip_Dump_clean %>%
   summarise(Ratio = sum(member_casual=="Member")/sum(member_casual=="Casual")) %>% 
   ggplot(aes(x=Month,y=Ratio,group=1)) +
   geom_point() +
-  geom_line()
+  geom_line() +
+  labs(title = "Member/Causal Rides Ratio per Month",x="Month",y="Member/Causal Rides Ratio")
+
 
 # Member to causal Rides ratio per Day of week
 MasterTrip_Dump_clean %>% 
@@ -508,7 +511,9 @@ MasterTrip_Dump_clean %>%
   summarise(Ratio = sum(member_casual=="Member")/sum(member_casual=="Casual")) %>% 
   ggplot(aes(x=DayOfWeek,y=Ratio,group=1)) +
   geom_point() +
-  geom_line()
+  geom_line() + 
+  labs(title = "Member/Causal Rides Ratio per Day of Week",x="DayOfWeek",y="Member/Causal Rides Ratio")
+
 
 # Average age of members per gender per year
 MasterTrip_Dump_clean %>% 
