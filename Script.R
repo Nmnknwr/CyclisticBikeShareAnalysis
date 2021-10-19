@@ -15,6 +15,8 @@ library("lubridate")
 library("geosphere")
 library("gridExtra") 
 library("ggmap")
+library("data.table")
+library("XML")
 
 getwd()
 # setwd("I:/Work/Datasets/Cyclistic/CSVs")
