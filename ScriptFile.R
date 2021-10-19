@@ -94,12 +94,53 @@ for(i in 1:nrow(files_unzipped_df)) {
 ####################### Shaping each to same structure, naming and class, combining per year ######################
 ###################################################################################################################
 
+## 2014 -
+
+combine_year(2014)
+
+
+all_2014 <- all_2014 %>% 
+  rename(ride_id = trip_id,
+         started_at = starttime,
+         ended_at = stoptime,
+         start_station_id = from_station_id,
+         start_station_name = from_station_name,
+         end_station_id = to_station_id,
+         end_station_name = to_station_name,
+         member_casual = usertype) %>% 
+  mutate(started_at = strptime(started_at,"%m/%d/%Y %H:%M"),
+         ended_at = strptime(ended_at,"%m/%d/%Y %H:%M"),
+         ride_id = as.character(ride_id),
+         start_station_id = as.character(start_station_id),
+         end_station_id = as.character(end_station_id))
+
+## 2015 -
+
+
+combine_year(2015)
+
+
+all_2015 <- all_2015 %>% 
+  rename(ride_id = trip_id,
+         started_at = starttime,
+         ended_at = stoptime,
+         start_station_id = from_station_id,
+         start_station_name = from_station_name,
+         end_station_id = to_station_id,
+         end_station_name = to_station_name,
+         member_casual = usertype) %>% 
+  mutate(started_at = strptime(started_at,"%m/%d/%Y %H:%M"),
+         ended_at = strptime(ended_at,"%m/%d/%Y %H:%M"),
+         ride_id = as.character(ride_id),
+         start_station_id = as.character(start_station_id),
+         end_station_id = as.character(end_station_id))
+
 ## 2016 -
 
- combine_year(2016)
+combine_year(2016)
 
- all_2016 <- all_2016 %>% 
-   rename(ride_id = trip_id,
+all_2016 <- all_2016 %>% 
+  rename(ride_id = trip_id,
          started_at = starttime,
          ended_at = stoptime,
          start_station_id = from_station_id,
