@@ -30,7 +30,7 @@ organise_all <- function() {
   }
   unlink(paste(dest_path,"__MACOSX",sep="/"),recursive = TRUE)
   unlink(paste(dest_path,"Divvy_Stations_Trips_2013",sep="/"),recursive = TRUE)
-  }
+}
   
 
 ## combine per year
@@ -39,7 +39,9 @@ combine_year <- function(fileyear) {
   pat <- paste("*",fileyear,"*",sep = "")
   list_df <- mget(ls(pattern = glob2rx(pat),envir = .GlobalEnv),envir = .GlobalEnv)
   name <- paste("all",fileyear,sep = "_")
+
   assign(name,bind_rows(list_df),envir = .GlobalEnv)
+
 }
 
 ## Clean, preprocess, add additional columns

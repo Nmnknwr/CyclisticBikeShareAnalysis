@@ -31,6 +31,7 @@ source("functions.R")
 
 dest_path <- "I:/Work/Datasets/Cyclistic"
 
+
 ###################################################################################################################
 ####################### Making Zipped files df with filename and DownloadURL ######################################
 ###################################################################################################################
@@ -51,6 +52,7 @@ download()
 ###################################################################################################################
 ####################### Unzipping files  ##########################################################################
 ###################################################################################################################
+
 unzip_all()
 
 ###################################################################################################################
@@ -66,7 +68,9 @@ files_unzipped_df <- files_unzipped_df %>%
 ####################### Deleting unwanted files/folders, adding extensions ########################################
 ###################################################################################################################
 
+
 organise_all()
+
 
 ###################################################################################################################
 ####################### Updating Unzipped files df with filename and path #########################################
@@ -91,7 +95,9 @@ for(i in 1:nrow(files_unzipped_df)) {
 ###################################################################################################################
 
 ## 2014 -
+
 combine_year(2014)
+
 
 all_2014 <- all_2014 %>% 
   rename(ride_id = trip_id,
@@ -110,7 +116,9 @@ all_2014 <- all_2014 %>%
 
 ## 2015 -
 
+
 combine_year(2015)
+
 
 all_2015 <- all_2015 %>% 
   rename(ride_id = trip_id,
@@ -148,7 +156,9 @@ all_2016 <- all_2016 %>%
 
 ## 2017 -
 
+
 combine_year(2017)
+
 
 all_2017 <- all_2017 %>% 
   rename(ride_id = trip_id,
@@ -180,7 +190,9 @@ Divvy_Trips_2018_Q1.csv_39 <- Divvy_Trips_2018_Q1.csv_39 %>%
          from_station_name = "03 - Rental Start Station Name",
          to_station_name = "02 - Rental End Station Name")
 
+
 combine_year(2018)
+
 
 all_2018 <- all_2018 %>% 
   rename(ride_id = trip_id,
@@ -212,7 +224,9 @@ Divvy_Trips_2019_Q2.csv_44 <- Divvy_Trips_2019_Q2.csv_44 %>%
          from_station_name = "03 - Rental Start Station Name",
          to_station_name = "02 - Rental End Station Name")
 
+
 combine_year(2019)
+
 
 all_2019 <- all_2019 %>% 
   rename(ride_id = trip_id,
@@ -237,6 +251,7 @@ Divvy_Trips_2020_Q1.csv_47 <- mutate(Divvy_Trips_2020_Q1.csv_47,start_station_id
 `202009-divvy-tripdata.csv_6` <- mutate(`202009-divvy-tripdata.csv_6`,start_station_id = as.character(start_station_id), end_station_id = as.character(end_station_id))
 `202010-divvy-tripdata.csv_7` <- mutate(`202010-divvy-tripdata.csv_7`,start_station_id = as.character(start_station_id), end_station_id = as.character(end_station_id))
 `202011-divvy-tripdata.csv_8` <- mutate(`202011-divvy-tripdata.csv_8`,start_station_id = as.character(start_station_id), end_station_id = as.character(end_station_id))
+
 
 combine_year(2020)
 
