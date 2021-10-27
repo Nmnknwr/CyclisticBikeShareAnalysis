@@ -73,19 +73,20 @@ clean_preprocess_2 <- function(dt) {
 
 clean_preprocess_3 <- function(dt) {
   dt <- dt %>% 
-    filter(!(start_station_name == "HQ QR" | Ride_Time<0))
+    filter(!(start_station_name == "HQ QR" | Ride_Time<0)) %>% 
+    filter(!(member_casual=="Dependent"))
   
   return(dt)
 }
 
-clean_preprocess_3 <- function(dt) {
+clean_preprocess_4 <- function(dt) {
   dt <- dt %>% 
     filter(!(is.na(start_station_id))) 
   
   return(dt)
 }
 
-clean_preprocess_3 <- function(dt) {
+clean_preprocess_5 <- function(dt) {
   dt <- dt %>% 
     filter(!(is.na(end_station_id)))
   

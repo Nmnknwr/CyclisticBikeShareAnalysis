@@ -339,7 +339,7 @@ MasterDT %>%
   filter(start_lng != end_lng & start_lat != end_lat) %>% 
   group_by(member_casual) %>% 
   summarise(rides = n(), 
-            avg_ride_time = mean(Ride_Time, na.rm = TRUE))
+            avg_ride_time = mean(Ride_Time, na.rm = TRUE)/60)
 
 
 # Count of rides, Average ride duration - per customer type - per day of the week
@@ -475,7 +475,6 @@ MasterDT %>%
 
 # Count of rides - per customer type per Year - line graph with points
 MasterDT %>% 
-  filter(Year!=2021) %>% 
   group_by(member_casual,Year) %>%
   summarise(Rides = n()) %>%
   ggplot(aes(x=Year,y=Rides,group=member_casual,color=member_casual)) + 
