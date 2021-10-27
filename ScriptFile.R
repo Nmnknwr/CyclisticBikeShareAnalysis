@@ -27,9 +27,11 @@ library("xfun")
 
 source("functions.R")
 
-## dest_path <- getwd()
+## When working on my mac
+dest_path <- "/Users/namankanwar/Case Studys/CyclisticBikeShareAnalysis/Data"
 
-dest_path <- "I:/Work/Datasets/Cyclistic"
+## When working on my PC
+## dest_path <- "I:/Work/Datasets/Cyclistic"
 
 
 ###################################################################################################################
@@ -87,7 +89,7 @@ files_unzipped_df <- files_unzipped_df %>%
 
 for(i in 1:nrow(files_unzipped_df)) {
   name <- paste(files_unzipped_df[i,2],i,sep="_")
-  assign(name,read_csv(files_unzipped_df[i,1]))
+  assign(name,fread(files_unzipped_df[i,1]))
 }
 
 ###################################################################################################################
@@ -114,6 +116,10 @@ all_2014 <- all_2014 %>%
          start_station_id = as.character(start_station_id),
          end_station_id = as.character(end_station_id))
 
+cols_to_del <- c(4,5)
+
+all_2014 <- all_2014[,(cols_to_del):=NULL]
+
 ## 2015 -
 
 
@@ -135,6 +141,10 @@ all_2015 <- all_2015 %>%
          start_station_id = as.character(start_station_id),
          end_station_id = as.character(end_station_id))
 
+cols_to_del <- c(4,5)
+
+all_2015 <- all_2015[,(cols_to_del):=NULL]
+
 ## 2016 -
 
 combine_year(2016)
@@ -153,6 +163,10 @@ all_2016 <- all_2016 %>%
          ride_id = as.character(ride_id),
          start_station_id = as.character(start_station_id),
          end_station_id = as.character(end_station_id))
+
+cols_to_del <- c(4,5)
+
+all_2016 <- all_2016[,(cols_to_del):=NULL]
 
 ## 2017 -
 
@@ -175,6 +189,10 @@ all_2017 <- all_2017 %>%
          start_station_id = as.character(start_station_id),
          end_station_id = as.character(end_station_id))
 
+cols_to_del <- c(4,5)
+
+all_2017 <- all_2017[,(cols_to_del):=NULL]
+
 ## 2018 -
 Divvy_Trips_2018_Q1.csv_39 <- Divvy_Trips_2018_Q1.csv_39 %>%
   rename(trip_id = "01 - Rental Details Rental ID",
@@ -194,6 +212,7 @@ Divvy_Trips_2018_Q1.csv_39 <- Divvy_Trips_2018_Q1.csv_39 %>%
 combine_year(2018)
 
 
+
 all_2018 <- all_2018 %>% 
   rename(ride_id = trip_id,
          started_at = start_time,
@@ -206,6 +225,10 @@ all_2018 <- all_2018 %>%
   mutate(ride_id = as.character(ride_id),
          start_station_id = as.character(start_station_id),
          end_station_id = as.character(end_station_id))
+
+cols_to_del <- c(4,5)
+
+all_2018 <- all_2018[,(cols_to_del):=NULL]
 
 
 ## 2019 -
@@ -227,7 +250,6 @@ Divvy_Trips_2019_Q2.csv_44 <- Divvy_Trips_2019_Q2.csv_44 %>%
 
 combine_year(2019)
 
-
 all_2019 <- all_2019 %>% 
   rename(ride_id = trip_id,
          started_at = start_time,
@@ -240,6 +262,11 @@ all_2019 <- all_2019 %>%
   mutate(ride_id = as.character(ride_id),
          start_station_id = as.character(start_station_id),
          end_station_id = as.character(end_station_id))
+
+cols_to_del <- c(4,5)
+
+all_2019 <- all_2019[,(cols_to_del):=NULL]
+
 
 ## 2020 -
 Divvy_Trips_2020_Q1.csv_47 <- mutate(Divvy_Trips_2020_Q1.csv_47,start_station_id = as.character(start_station_id), end_station_id = as.character(end_station_id))
@@ -255,29 +282,50 @@ Divvy_Trips_2020_Q1.csv_47 <- mutate(Divvy_Trips_2020_Q1.csv_47,start_station_id
 
 combine_year(2020)
 
+cols_to_del <- c(2)
+
+all_2020 <- all_2020[,(cols_to_del):=NULL]
+
+
 ## 2021 -
 combine_year(2021)
 
+cols_to_del <- c(2)
 
+all_2021 <- all_2021[,(cols_to_del):=NULL]
 ###################################################################################################################
-####################### Combining into single data frame ##########################################################
-###################################################################################################################
-
-list_df <- mget(ls(pattern = glob2rx("all_*")))
-MasterDF <- bind_rows(list_df)
-
-###################################################################################################################
-####################### Deleting separate data frames #############################################################
+####################### Combining into single data frame, Deleting separate data frames ###########################
 ###################################################################################################################
 
 rm(list = ls()[grepl("csv", ls())])
+
+list_dt <- mget(ls(pattern = glob2rx("all_*")))
+
+MasterDT <- bind_rows(list_dt)
+
 rm(list = ls()[grepl("all_", ls())])
+
+gc()
 
 ###################################################################################################################
 ####################### Cleaning, precpocessing, adding new columns ###############################################
 ###################################################################################################################
 
-MasterDF <- clean_preprocess(MasterDF)
+MasterDT <- clean_preprocess_1(MasterDT)
+
+MasterDT <- clean_preprocess_2(MasterDT)
+
+MasterDT <- clean_preprocess_3(MasterDT)
+
+MasterDT <- clean_preprocess_4(MasterDT)
+
+MasterDT <- clean_preprocess_5(MasterDT)
+
+MasterDT <- clean_preprocess_6(MasterDT)
+
+MasterDT <- clean_preprocess_7(MasterDT)
+
+gc()
 
 ############################################################
 
@@ -287,7 +335,7 @@ MasterDF <- clean_preprocess(MasterDF)
 ## Tables/counts
 
 # Count of rides, Average ride duration - per customer type - overall
-MasterDF %>% 
+MasterDT %>% 
   filter(start_lng != end_lng & start_lat != end_lat) %>% 
   group_by(member_casual) %>% 
   summarise(rides = n(), 
@@ -296,7 +344,7 @@ MasterDF %>%
 
 # Count of rides, Average ride duration - per customer type - per day of the week
 
-MasterDF %>%
+MasterDT %>%
   group_by(member_casual,DayOfWeek) %>%
   summarise(Rides = n(), Avg_Ride_time = mean(Ride_Time)/60) %>%
   arrange(member_casual,DayOfWeek)
@@ -304,28 +352,28 @@ MasterDF %>%
 
 # Count of rides, Average ride duration - per customer type - per month
 
-MasterDF %>%
+MasterDT %>%
   group_by(member_casual,Month) %>%
   summarise(Rides = n(), Avg_Ride_time = mean(Ride_Time)/60) %>%
   arrange(Month)
 
 # Count of rides, Average ride duration - per customer type - per Year
 
-MasterDF %>%
+MasterDT %>%
   group_by(member_casual,Year) %>%
   summarise(Rides = n(), Avg_Ride_time = mean(Ride_Time)/60) %>%
   arrange(Year)
 
 
 # Count of rides, Average ride duration - per Starting Station - overall
-MasterDF %>%
+MasterDT %>%
   group_by(start_station_id,start_station_name) %>% 
   summarise(Rides = n(), Avg_Ride_time = mean(Ride_Time)/60) %>% 
   arrange(desc(Rides))
 
 
 # Casual & Member Share per Day of Week
-MasterDF %>% 
+MasterDT %>% 
   group_by(DayOfWeek) %>% 
   summarise(Member_Ride_Share = round((sum(member_casual=="Member"))/n()*100,0),
             Casual_Ride_Share = round((sum(member_casual=="Casual"))/n()*100,0))%>% 
@@ -333,14 +381,14 @@ MasterDF %>%
 
 
 # Casual & Member share per Station
-MasterDF %>% 
+MasterDT %>% 
   group_by(start_station_id,start_station_name) %>% 
   summarise(Member_Ride_Share = round((sum(member_casual=="Member"))/n()*100,0),
             Casual_Ride_Share = round((sum(member_casual=="Casual"))/n()*100,0))%>% 
   arrange(desc(n()))
 
 # Casual & Member share per year
-MasterDF %>% 
+MasterDT %>% 
   group_by(Year) %>% 
   summarise(MemberShare = (sum(member_casual=="Member")/n())*100,
             CasualShare = (sum(member_casual=="Casual")/n())*100) %>% 
@@ -348,7 +396,7 @@ MasterDF %>%
 
 
 # Casual & Member share per month
-MasterDF %>% 
+MasterDT %>% 
   group_by(Month) %>% 
   summarise(MemberShare = (sum(member_casual=="Member")/n())*100,
             CasualShare = (sum(member_casual=="Casual")/n())*100) %>% 
@@ -357,7 +405,7 @@ MasterDF %>%
 
 
 # Average age of members per gender
-MasterDF %>% 
+MasterDT %>% 
   filter(member_casual!="Casual" & gender != "NA") %>% 
   group_by(gender) %>% 
   summarise(Average_age = mean(2021-birthyear,na.rm=TRUE))
@@ -365,7 +413,7 @@ MasterDF %>%
 # Plots
 
 # Count of rides per customer type over time - line -- shows seasonality
-MasterDF %>% 
+MasterDT %>% 
   group_by(Date,member_casual) %>% 
   summarise(Rides =  n()) %>% 
   ggplot(aes(x=Date,y=Rides,group=member_casual,color=member_casual)) +
@@ -373,7 +421,7 @@ MasterDF %>%
 
 
 # Avg ride time per customer type overall
-MasterDF %>% 
+MasterDT %>% 
   filter(start_lng != end_lng & start_lat != end_lat) %>% 
   group_by(member_casual) %>% 
   summarise(rides = n(), 
@@ -384,7 +432,7 @@ MasterDF %>%
 
 
 # Count of rides - per customer type per day of week - line graph with points
-MasterDF %>% 
+MasterDT %>% 
   group_by(DayOfWeek,member_casual) %>% 
   summarise(Rides=n()) %>% 
   ggplot(aes(x=DayOfWeek,y=Rides,group=member_casual,color=member_casual)) + 
@@ -392,7 +440,7 @@ MasterDF %>%
   geom_point()
 
 # Avg Ride time - per customer type per day of week - line graph with points
-MasterDF %>% 
+MasterDT %>% 
   group_by(member_casual,DayOfWeek) %>%
   summarise(Rides = n(), Avg_Ride_time = mean(Ride_Time)/60) %>%
   arrange(member_casual,DayOfWeek) %>% 
@@ -401,7 +449,7 @@ MasterDF %>%
   geom_point()
 
 # Count of rides - per customer type per month - line graph with points
-MasterDF %>% 
+MasterDT %>% 
   group_by(member_casual,Month) %>% 
   summarise(Rides = n()) %>% 
   ggplot(aes(x=Month,y=Rides,group=member_casual,color=member_casual)) +
@@ -410,7 +458,7 @@ MasterDF %>%
 
 
 # Avg Ride time - per customer type per month - line graph with points
-MasterDF %>% 
+MasterDT %>% 
   group_by(member_casual,Month) %>%
   summarise(Avg_Ride_time = mean(Ride_Time)/60) %>%
   ggplot(aes(x=Month,y=Avg_Ride_time,group=member_casual,color=member_casual)) + 
@@ -418,7 +466,7 @@ MasterDF %>%
   geom_point()
 
 # Avg Ride time - per customer type per Year - line graph with points
-MasterDF %>% 
+MasterDT %>% 
   group_by(member_casual,Year) %>%
   summarise(Avg_Ride_time = mean(Ride_Time)/60) %>%
   ggplot(aes(x=Year,y=Avg_Ride_time,group=member_casual,color=member_casual)) + 
@@ -426,7 +474,7 @@ MasterDF %>%
   geom_point()
 
 # Count of rides - per customer type per Year - line graph with points
-MasterDF %>% 
+MasterDT %>% 
   filter(Year!=2021) %>% 
   group_by(member_casual,Year) %>%
   summarise(Rides = n()) %>%
@@ -436,7 +484,7 @@ MasterDF %>%
 
 
 # % split of total rides by user type per year
-MasterDF %>% 
+MasterDT %>% 
   group_by(Year) %>% 
   summarise(Member = (sum(member_casual=="Member")/n())*100,
             Casual = (sum(member_casual=="Casual")/n())*100) %>% 
@@ -448,7 +496,7 @@ MasterDF %>%
 
 
 # % split of total rides by user type per Day of week
-MasterDF %>% 
+MasterDT %>% 
   group_by(DayOfWeek) %>% 
   summarise(Member = (sum(member_casual=="Member")/n())*100,
             Casual = (sum(member_casual=="Casual")/n())*100) %>% 
@@ -460,7 +508,7 @@ MasterDF %>%
 
 
 # % split of total rides by user type per month
-MasterDF %>% 
+MasterDT %>% 
   group_by(Month) %>% 
   summarise(Member = (sum(member_casual=="Member")/n())*100,
             Casual = (sum(member_casual=="Casual")/n())*100) %>% 
@@ -473,7 +521,7 @@ MasterDF %>%
 
 
 # Member to causal Rides ratio per year
-MasterDF %>% 
+MasterDT %>% 
   group_by(Year) %>% 
   summarise(Ratio = sum(member_casual=="Member")/sum(member_casual=="Casual")) %>% 
   ggplot(aes(x=Year,y=Ratio,group=1)) +
@@ -482,7 +530,7 @@ MasterDF %>%
   labs(title = "Member/Causal Rides Ratio per Year",x="Year",y="Member/Causal Rides Ratio")
 
 # Member to causal Rides ratio per month
-MasterDF %>% 
+MasterDT %>% 
   group_by(Month) %>% 
   summarise(Ratio = sum(member_casual=="Member")/sum(member_casual=="Casual")) %>% 
   ggplot(aes(x=Month,y=Ratio,group=1)) +
@@ -492,7 +540,7 @@ MasterDF %>%
 
 
 # Member to causal Rides ratio per Day of week
-MasterDF %>% 
+MasterDT %>% 
   group_by(DayOfWeek) %>% 
   summarise(Ratio = sum(member_casual=="Member")/sum(member_casual=="Casual")) %>% 
   ggplot(aes(x=DayOfWeek,y=Ratio,group=1)) +
@@ -502,7 +550,7 @@ MasterDF %>%
 
 
 # Average age of members per gender per year
-MasterDF %>% 
+MasterDT %>% 
   filter(member_casual!="Casual" & gender != "NA") %>%
   group_by(Year,gender) %>% 
   summarise(Average_age = mean(2021-birthyear,na.rm=TRUE)) %>% 
@@ -511,7 +559,7 @@ MasterDF %>%
   geom_line()
 
 # % split of Member gender per year
-MasterDF %>% 
+MasterDT %>% 
   group_by(Year) %>% 
   filter(member_casual!="Casual" & gender != "NA") %>%
   summarise(Male = (sum(gender=="Male")/n())*100,
@@ -528,7 +576,7 @@ MasterDF %>%
 
 # Create new data frame with post popular routes
 
-Fav_stations <- MasterDF %>% 
+Fav_stations <- MasterDT %>% 
   filter(start_lng != end_lng & start_lat != end_lat) %>%
   group_by(start_lng, start_lat, end_lng, end_lat, member_casual) %>%
   summarise(Rides = n()) %>% 

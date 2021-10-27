@@ -37,20 +37,25 @@ organise_all <- function() {
 
 combine_year <- function(fileyear) {
   pat <- paste("*",fileyear,"*",sep = "")
-  list_df <- mget(ls(pattern = glob2rx(pat),envir = .GlobalEnv),envir = .GlobalEnv)
+  list_dt <- mget(ls(pattern = glob2rx(pat),envir = .GlobalEnv),envir = .GlobalEnv)
   name <- paste("all",fileyear,sep = "_")
 
-  assign(name,bind_rows(list_df),envir = .GlobalEnv)
+  assign(name,bind_rows(list_dt),envir = .GlobalEnv)
 
 }
 
 ## Clean, preprocess, add additional columns
-clean_preprocess <- function(df) {
-  df <- df[-c(4,5,13)]
-  df <- df %>% 
+clean_preprocess_1 <- function(dt) {
+  dt <- dt %>% 
     mutate(member_casual = recode(member_casual,"Subscriber"="Member","Customer"="Casual")) %>%
     mutate(member_casual = recode(member_casual,"member"="Member","casual"="Casual")) %>% 
-    distinct(ride_id, .keep_all = TRUE) %>% 
+    distinct(ride_id, .keep_all = TRUE)
+
+  return(dt)
+}
+
+clean_preprocess_2 <- function(dt) {
+  dt <- dt %>% 
     mutate(
       Date = as.Date(started_at),
       Month = format(as.Date(Date),"%b"),
@@ -61,13 +66,41 @@ clean_preprocess <- function(df) {
       WeekDay_WeekEnd = case_when(
         DayOfWeek == "Sat" | DayOfWeek == "Sun" ~ "Weekend",
         TRUE ~ "Weekday"),
-      Ride_Time = as.numeric(as.character(Ride_Time))) %>%
-    filter(!(start_station_name == "HQ QR" | Ride_Time<0)) %>% 
-    filter(!(is.na(start_station_id))) %>% 
+      Ride_Time = as.numeric(as.character(Ride_Time)))
+  
+  return(dt)
+}
+
+clean_preprocess_3 <- function(dt) {
+  dt <- dt %>% 
+    filter(!(start_station_name == "HQ QR" | Ride_Time<0))
+  
+  return(dt)
+}
+
+clean_preprocess_3 <- function(dt) {
+  dt <- dt %>% 
+    filter(!(is.na(start_station_id))) 
+  
+  return(dt)
+}
+
+clean_preprocess_3 <- function(dt) {
+  dt <- dt %>% 
     filter(!(is.na(end_station_id)))
   
-  df$DayOfWeek <- ordered(df$DayOfWeek, levels=c("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"))
-  df$Month <- ordered(df$Month, levels=c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul","Aug","Sep","Oct","Nov","Dec"))
+  return(dt)
+}
+
+
+clean_preprocess_6 <- function(dt) {
+  dt$DayOfWeek <- ordered(dt$DayOfWeek, levels=c("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"))
   
-  return(df)
+  return(dt)
+}
+
+clean_preprocess_7 <- function(dt) {
+  dt$Month <- ordered(dt$Month, levels=c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul","Aug","Sep","Oct","Nov","Dec"))
+  
+  return(dt)
 }
