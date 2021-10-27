@@ -24,6 +24,9 @@ library("stringr")
 library("dplyr")
 library("pbapply")
 library("xfun")
+library("broom")
+library("skimr")
+
 
 source("functions.R")
 
@@ -35,16 +38,25 @@ dest_path <- "/Users/namankanwar/Case Studys/CyclisticBikeShareAnalysis/Data"
 
 
 ###################################################################################################################
-####################### Making Zipped files df with filename and DownloadURL ######################################
+####################### Making Zipped files df with filename and DownloadURL (Not taking 2013 and 2014 data) ######
 ###################################################################################################################
 
 files_zipped_df <- get_bucket_df("divvy-tripdata") %>% 
   filter(str_detect(Key,".zip")) %>% 
   select(1) 
+
 files_zipped_df <- files_zipped_df %>% 
   mutate(DownloadURL = paste("https://divvy-tripdata.s3.amazonaws.com",Key,sep="/"))
+  
+
 colnames(files_zipped_df) <- c("Filename","DownloadURL")
 
+files_zipped_df <- files_zipped_df %>% 
+  filter(!(str_detect(Filename,"2014"))) %>% 
+  filter(!(str_detect(Filename,"2013"))) %>% 
+  filter(!(str_detect(Filename,"2015")))
+
+ 
 ###################################################################################################################
 ####################### Downloading all zip files from aws s3 bucket ##############################################
 ###################################################################################################################
@@ -96,54 +108,28 @@ for(i in 1:nrow(files_unzipped_df)) {
 ####################### Shaping each to same structure, naming and class, combining per year ######################
 ###################################################################################################################
 
-## 2014 -
-
-combine_year(2014)
-
-
-all_2014 <- all_2014 %>% 
-  rename(ride_id = trip_id,
-         started_at = starttime,
-         ended_at = stoptime,
-         start_station_id = from_station_id,
-         start_station_name = from_station_name,
-         end_station_id = to_station_id,
-         end_station_name = to_station_name,
-         member_casual = usertype) %>% 
-  mutate(started_at = strptime(started_at,"%m/%d/%Y %H:%M"),
-         ended_at = strptime(ended_at,"%m/%d/%Y %H:%M"),
-         ride_id = as.character(ride_id),
-         start_station_id = as.character(start_station_id),
-         end_station_id = as.character(end_station_id))
-
-cols_to_del <- c(4,5)
-
-all_2014 <- all_2014[,(cols_to_del):=NULL]
-
 ## 2015 -
 
 
-combine_year(2015)
+# combine_year(2015)
+#all_2015 <- all_2015 %>% 
+#  rename(ride_id = trip_id,
+#         started_at = starttime,
+#         ended_at = stoptime,
+#         start_station_id = from_station_id,
+#         start_station_name = from_station_name,
+#         end_station_id = to_station_id,
+#         end_station_name = to_station_name,
+#         member_casual = usertype) %>% 
+#  mutate(started_at = strptime(started_at,"%m/%d/%Y %H:%M"),
+#         ended_at = strptime(ended_at,"%m/%d/%Y %H:%M"),
+#         ride_id = as.character(ride_id),
+#         start_station_id = as.character(start_station_id),
+#         end_station_id = as.character(end_station_id))
 
+# cols_to_del <- c(4,5)
 
-all_2015 <- all_2015 %>% 
-  rename(ride_id = trip_id,
-         started_at = starttime,
-         ended_at = stoptime,
-         start_station_id = from_station_id,
-         start_station_name = from_station_name,
-         end_station_id = to_station_id,
-         end_station_name = to_station_name,
-         member_casual = usertype) %>% 
-  mutate(started_at = strptime(started_at,"%m/%d/%Y %H:%M"),
-         ended_at = strptime(ended_at,"%m/%d/%Y %H:%M"),
-         ride_id = as.character(ride_id),
-         start_station_id = as.character(start_station_id),
-         end_station_id = as.character(end_station_id))
-
-cols_to_del <- c(4,5)
-
-all_2015 <- all_2015[,(cols_to_del):=NULL]
+# all_2015 <- all_2015[,(cols_to_del):=NULL]
 
 ## 2016 -
 
@@ -194,7 +180,7 @@ cols_to_del <- c(4,5)
 all_2017 <- all_2017[,(cols_to_del):=NULL]
 
 ## 2018 -
-Divvy_Trips_2018_Q1.csv_39 <- Divvy_Trips_2018_Q1.csv_39 %>%
+Divvy_Trips_2018_Q1.csv_29 <- Divvy_Trips_2018_Q1.csv_29 %>%
   rename(trip_id = "01 - Rental Details Rental ID",
          bikeid = "01 - Rental Details Bike ID",
          tripduration = "01 - Rental Details Duration In Seconds Uncapped",
@@ -233,7 +219,7 @@ all_2018 <- all_2018[,(cols_to_del):=NULL]
 
 ## 2019 -
 
-Divvy_Trips_2019_Q2.csv_44 <- Divvy_Trips_2019_Q2.csv_44 %>% 
+Divvy_Trips_2019_Q2.csv_34 <- Divvy_Trips_2019_Q2.csv_34 %>% 
   rename(trip_id = "01 - Rental Details Rental ID",
          bikeid = "01 - Rental Details Bike ID",
          tripduration = "01 - Rental Details Duration In Seconds Uncapped",
@@ -269,7 +255,7 @@ all_2019 <- all_2019[,(cols_to_del):=NULL]
 
 
 ## 2020 -
-Divvy_Trips_2020_Q1.csv_47 <- mutate(Divvy_Trips_2020_Q1.csv_47,start_station_id = as.character(start_station_id), end_station_id = as.character(end_station_id))
+Divvy_Trips_2020_Q1.csv_37 <- mutate(Divvy_Trips_2020_Q1.csv_37,start_station_id = as.character(start_station_id), end_station_id = as.character(end_station_id))
 `202004-divvy-tripdata.csv_1` <- mutate(`202004-divvy-tripdata.csv_1`,start_station_id = as.character(start_station_id), end_station_id = as.character(end_station_id))
 `202005-divvy-tripdata.csv_2` <- mutate(`202005-divvy-tripdata.csv_2`,start_station_id = as.character(start_station_id), end_station_id = as.character(end_station_id))
 `202006-divvy-tripdata.csv_3` <- mutate(`202006-divvy-tripdata.csv_3`,start_station_id = as.character(start_station_id), end_station_id = as.character(end_station_id))
@@ -299,16 +285,21 @@ all_2021 <- all_2021[,(cols_to_del):=NULL]
 
 rm(list = ls()[grepl("csv", ls())])
 
+gc()
+
 list_dt <- mget(ls(pattern = glob2rx("all_*")))
 
 MasterDT <- bind_rows(list_dt)
+
+# Train_DS <- drop.na(bind_rows(list(all_2015,all_2016,all_2017,all_2018,all_2019,all_2020)))
+# Test_DS <- drop.na(all_2021)
 
 rm(list = ls()[grepl("all_", ls())])
 
 gc()
 
 ###################################################################################################################
-####################### Cleaning, precpocessing, adding new columns ###############################################
+####################### Cleaning, pre-processing, adding new columns, creating train and test dt's ################
 ###################################################################################################################
 
 MasterDT <- clean_preprocess_1(MasterDT)
@@ -326,6 +317,8 @@ MasterDT <- clean_preprocess_6(MasterDT)
 MasterDT <- clean_preprocess_7(MasterDT)
 
 gc()
+
+skim(MasterDT)
 
 ############################################################
 
@@ -568,7 +561,39 @@ MasterDT %>%
   geom_point() +
   geom_line() 
 
+###################################################################################
+## Hourly count of rides for 2014 to 2020 end
+###################################################################################
 
+For_Regression <- MasterDT[Year %in% c(2014,2015,2016,2017,2018,2019,2020)]
+
+For_Regression <- MasterDT %>%
+  mutate(Hour = hour(started_at))
+
+For_Regression %>% 
+  group_by(Month,DayOfWeek,Hour,member_casual) %>% 
+  summarise(Rides = n())
+
+MasterDT %>%
+  mutate(Hour = hour(started_at)) %>% 
+  group_by(Hour) %>% 
+  summarise(Rides = n()) %>% 
+  ggplot(aes(Hour,Rides)) +
+  geom_point() +
+  geom_line() +
+  scale_x_continuous(n.breaks = 24)
+
+###################################################################################
+## Trying quasipoisson regression for counts per hour
+###################################################################################
+
+fmla <- Rides ~ Hour + DayOfWeek + Month 
+model <- glm(fmla,data=For_Regression,family=quasipoisson)
+(perf <- glance(model)) 
+(pseudoR2 <- glance(model) %>%
+    summarise(x = 1 - deviance/null.deviance))
+
+For_Regression$pred 
 ###################################################################################
 ##ROUGH
 ###################################################################################

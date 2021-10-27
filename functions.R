@@ -93,7 +93,6 @@ clean_preprocess_5 <- function(dt) {
   return(dt)
 }
 
-
 clean_preprocess_6 <- function(dt) {
   dt$DayOfWeek <- ordered(dt$DayOfWeek, levels=c("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"))
   
