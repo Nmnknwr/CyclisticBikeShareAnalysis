@@ -7,7 +7,7 @@ download <- function() {
 
 ## Unzip
 
-unzip_all <- function() {
+unzip <- function() {
   for(i in 1:nrow(files_zipped_df)) {
     unzip(paste(dest_path,files_zipped_df[i,1],sep="/"),exdir = dest_path)
     file.remove(paste(dest_path,files_zipped_df[i,1],sep="/"))
@@ -17,90 +17,78 @@ unzip_all <- function() {
 
 ## Organize files into same directory + delete 2013 and unwanted files/folders
 
-organise_all <- function() {
+organise <- function() {
   for(i in 1:nrow(files_unzipped_df)) {
-    if(file_ext(files_unzipped_df[i,1])=="zip" | file_ext(files_unzipped_df[i,1])=="txt" | str_detect(files_unzipped_df[i,2],"_Stations_")==TRUE) {
-      file.remove(files_unzipped_df[i,1])
-    } else if (file_ext(files_unzipped_df[i,1])=="") {
+    if (file_ext(files_unzipped_df[i,1])=="") {
       file.rename(files_unzipped_df[i,1],paste(files_unzipped_df[i,1],"csv",sep="."))
-    } else if (file_ext(files_unzipped_df[i,1])=="xlsx") {
-      newname <- gsub("xlsx","csv",files_unzipped_df[i,1])
-      file.rename(files_unzipped_df[i,1],newname)
-    } 
+    }
   }
   unlink(paste(dest_path,"__MACOSX",sep="/"),recursive = TRUE)
-  unlink(paste(dest_path,"Divvy_Stations_Trips_2013",sep="/"),recursive = TRUE)
 }
   
 
-## combine per year
+## Load into R
 
-combine_year <- function(fileyear) {
-  pat <- paste("*",fileyear,"*",sep = "")
+load_2019 <- function() {
+  files_unzipped_df <- files_unzipped_df %>% 
+    filter(str_detect(Filename,"2019"))
+  
+  column_names <- c("ride_id","started_at","ended_at","start_station_id","start_station_name","end_station_id","end_station_name","member_casual")
+  
+
+  for(i in 1:nrow(files_unzipped_df)) {
+    name <- paste("dt",files_unzipped_df[i,2],i,sep="_")
+    assign(name,fread(files_unzipped_df[i,1],drop=c(4,5,11,12),col.names = column_names,colClasses = list(character=c(1,6,8,10))), envir = .GlobalEnv)
+  }
+  pat <- "*2019*csv*"
   list_dt <- mget(ls(pattern = glob2rx(pat),envir = .GlobalEnv),envir = .GlobalEnv)
-  name <- paste("all",fileyear,sep = "_")
-
+  name <- "all_2019"
   assign(name,bind_rows(list_dt),envir = .GlobalEnv)
-
-}
-
-## Clean, preprocess, add additional columns
-clean_preprocess_1 <- function(dt) {
-  dt <- dt %>% 
-    mutate(member_casual = recode(member_casual,"Subscriber"="Member","Customer"="Casual")) %>%
-    mutate(member_casual = recode(member_casual,"member"="Member","casual"="Casual")) %>% 
-    distinct(ride_id, .keep_all = TRUE)
-
-  return(dt)
-}
-
-clean_preprocess_2 <- function(dt) {
-  dt <- dt %>% 
-    mutate(
-      Date = as.Date(started_at),
-      Month = format(as.Date(Date),"%b"),
-      Year = format(as.Date(Date),"%Y"),
-      Day = format(as.Date(Date),"%d"),
-      DayOfWeek = format(as.Date(Date),"%a"),
-      Ride_Time = difftime(ended_at,started_at),
-      WeekDay_WeekEnd = case_when(
-        DayOfWeek == "Sat" | DayOfWeek == "Sun" ~ "Weekend",
-        TRUE ~ "Weekday"),
-      Ride_Time = as.numeric(as.character(Ride_Time)))
   
-  return(dt)
+  rm(list = ls(envir = .GlobalEnv)[grepl("csv", ls(envir = .GlobalEnv))],envir = .GlobalEnv)
+  
+  
 }
 
-clean_preprocess_3 <- function(dt) {
-  dt <- dt %>% 
-    filter(!(start_station_name == "HQ QR" | Ride_Time<0)) %>% 
-    filter(!(member_casual=="Dependent"))
+
+load_2020_2021 <- function() {
+  years_to_include <- c("2020","2021")
   
-  return(dt)
+  column_names <- c("ride_id","started_at","ended_at","start_station_name","start_station_id","end_station_name","end_station_id","start_lat","start_lng","end_lat","end_lng", "member_casual")
+  
+  files_unzipped_df <- files_unzipped_df %>% 
+    filter(str_detect(Filename,paste(years_to_include,collapse = "|")))
+
+    for(i in 1:nrow(files_unzipped_df)) {
+    name <- paste("dt",files_unzipped_df[i,2],i,sep="_")
+    assign(name,fread(files_unzipped_df[i,1],drop=c(2),col.names = column_names,colClasses = list(character=c(1,6,8,13))),envir = .GlobalEnv)
+  }
+  pat <- "*202*csv*"
+  list_dt <- mget(ls(pattern = glob2rx(pat),envir = .GlobalEnv),envir = .GlobalEnv)
+  name <- "all_2020_2021"
+  assign(name,bind_rows(list_dt),envir = .GlobalEnv)
+  
+  rm(list = ls(envir = .GlobalEnv)[grepl("csv", ls(envir = .GlobalEnv))],envir = .GlobalEnv)
+  
+  
 }
 
-clean_preprocess_4 <- function(dt) {
-  dt <- dt %>% 
-    filter(!(is.na(start_station_id))) 
-  
+## Add new columns
+
+add_new_columns <- function(dt) {
+  dt <- dt[, `:=` (Date = as.Date(started_at),
+                               Ride_Time = difftime(ended_at,started_at),
+                               Month = format(as.Date(started_at),"%b"),
+                               Year=format(as.Date(started_at),"%Y"),
+                               Day=format(as.Date(started_at),"%d"),
+                               DayOfWeek = format(as.Date(started_at),"%a"))][, `:=` (WeekDay_WeekEnd = case_when(DayOfWeek == "Sat" | DayOfWeek == "Sun" ~ "Weekend",TRUE ~ "Weekday"))]
   return(dt)
+  
 }
 
-clean_preprocess_5 <- function(dt) {
-  dt <- dt %>% 
-    filter(!(is.na(end_station_id)))
-  
-  return(dt)
-}
+## Clean, preprocess, filter
+clean_preprocess <- function(dt) {
+  dt <- dt[.(member_casual=c("Subscriber","member"), to="Member"), on="member_casual",member_casual := i.to][.(member_casual=c("casual","Customer"), to="Casual"), on="member_casual",member_casual := i.to][member_casual!="Dependent"][, `:=` (Ride_Time = as.numeric(as.character(Ride_Time)))][, `:=` (DayOfWeek=ordered(DayOfWeek, levels=c("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat")))][, `:=` (Month=ordered(Month, levels=c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul","Aug","Sep","Oct","Nov","Dec")))][, `:=` (WeekDay_WeekEnd = as.factor(WeekDay_WeekEnd))][start_station_name != "HQ QR"][!(is.na(start_station_id))][!(is.na(end_station_id))][!(Ride_Time<0)][, `:=` (Day = as.numeric(as.character(Day)),Year = as.numeric(as.character(Year)),member_casual=as.factor(member_casual))]
 
-clean_preprocess_6 <- function(dt) {
-  dt$DayOfWeek <- ordered(dt$DayOfWeek, levels=c("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"))
-  
-  return(dt)
-}
-
-clean_preprocess_7 <- function(dt) {
-  dt$Month <- ordered(dt$Month, levels=c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul","Aug","Sep","Oct","Nov","Dec"))
-  
   return(dt)
 }
