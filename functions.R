@@ -7,7 +7,7 @@ download <- function() {
 
 ## Unzip
 
-unzip <- function() {
+unzip_files <- function() {
   for(i in 1:nrow(files_zipped_df)) {
     unzip(paste(dest_path,files_zipped_df[i,1],sep="/"),exdir = dest_path)
     file.remove(paste(dest_path,files_zipped_df[i,1],sep="/"))
