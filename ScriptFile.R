@@ -37,7 +37,7 @@ source("functions.R")
 
 
 ###################################################################################################################
-####################### Making Zipped files df with filename and DownloadURL (Not taking 2013 and 2014 data) ######
+####################### Making Zipped files df (Only taking 2019 onwards data) ####################################
 ###################################################################################################################
 
 files_zipped_df <- get_bucket_df("divvy-tripdata") %>% 
@@ -53,10 +53,10 @@ files_zipped_df <- files_zipped_df %>%
 
 colnames(files_zipped_df) <- c("Filename","DownloadURL","FilePath")
 
-years_to_exclude <- c("2013","2014","2015","2016","2017","2018")
+years_to_include <- c("2019","2020","2021")
 
 files_zipped_df <- files_zipped_df %>% 
-  filter(!(str_detect(Filename,paste(years_to_exclude,collapse = "|"))))
+  filter(str_detect(Filename,paste(years_to_exclude,collapse = "|")))
 
  
 ###################################################################################################################
@@ -70,7 +70,7 @@ download()
 ####################### Unzipping All #############################################################################
 ###################################################################################################################
 
-unzip()
+unzip_files()
 
 
 ###################################################################################################################
@@ -98,7 +98,7 @@ files_unzipped_df <- files_unzipped_df %>%
   mutate(Filename = basename(FilePath))
 
 ###################################################################################################################
-####################### Loading all files to data frames, making of list of all dataframes ########################
+####################### Loading all files to data tables ##########################################################
 ###################################################################################################################
 
 load_2019()
@@ -128,7 +128,7 @@ gc()
 MasterDT <- add_new_columns(MasterDT)
 
 ###################################################################################################################
-####################### Cleaning, pre-processing, filtering #########################################################
+####################### Cleaning, pre-processing, filtering #######################################################
 ###################################################################################################################
 
 MasterDT <- clean_preprocess(MasterDT)
@@ -325,7 +325,7 @@ MasterDT[,.(Ratio = sum(member_casual=="Member")/sum(member_casual=="Casual")),b
 ##ROUGH
 ###################################################################################
 
-# Create new data frame with post popular routes
+# Create new data frame with most popular routes
 
 Fav_stations <- MasterDT %>% 
   filter(start_lng != end_lng & start_lat != end_lat) %>%
@@ -343,7 +343,7 @@ Fav_station_Member <- Fav_stations %>%
   filter(member_casual=="Member") %>% 
   head(250)
 
-#Lets store bounding box coordinates for ggmap:
+# Lets store bounding box coordinates for ggmap:
 bb <- c(
   left = -87.700424,
   bottom = 41.790769,
@@ -351,7 +351,7 @@ bb <- c(
   top = 41.990119
 )
 
-#Here we store the map
+# Here we store the map
 map <- get_stamenmap(
   bbox = bb,
   zoom = 15,
