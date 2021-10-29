@@ -76,14 +76,16 @@ load_2020_2021 <- function() {
 ## Add new columns
 
 add_new_columns <- function(dt) {
-  dt <- dt[, `:=` (Date = as.Date(started_at),
-                               Ride_Time = difftime(ended_at,started_at),
-                               Month = format(as.Date(started_at),"%b"),
-                               Year=format(as.Date(started_at),"%Y"),
-                               Day=format(as.Date(started_at),"%d"),
-                               DayOfWeek = format(as.Date(started_at),"%a"))][, `:=` (WeekDay_WeekEnd = case_when(DayOfWeek == "Sat" | DayOfWeek == "Sun" ~ "Weekend",TRUE ~ "Weekday"))]
-  return(dt)
+  dt$Date <- as.Date(dt$started_at)
+  dt$Month <- format(as.Date(dt$Date),"%b")
+  dt$Year <- format(as.Date(dt$Date),"%Y")
+  dt$Day <- format(as.Date(dt$Date),"%d")
+  dt$DayOfWeek <- format(as.Date(dt$Date),"%a") 
+  dt$Ride_Time <- difftime(dt$ended_at,dt$started_at)
+  dt <- dt %>% 
+    mutate(WeekDay_WeekEnd = case_when(DayOfWeek == "Sat" | DayOfWeek == "Sun" ~ "Weekend",TRUE ~ "Weekday"))
   
+  return(dt)
 }
 
 ## Clean, preprocess, filter

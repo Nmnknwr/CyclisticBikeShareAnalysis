@@ -30,10 +30,10 @@ library("skimr")
 source("functions.R")
 
 ## When working on my mac
-## dest_path <- "/Users/namankanwar/Case Studys/CyclisticBikeShareAnalysis/Data"
+ dest_path <- "/Users/namankanwar/Case Studys/CyclisticBikeShareAnalysis/Data"
 
 ## When working on my PC
- dest_path <- "I:/Work/Datasets/Cyclistic"
+# dest_path <- "I:/Work/Datasets/Cyclistic"
 
 
 ###################################################################################################################
@@ -56,7 +56,7 @@ colnames(files_zipped_df) <- c("Filename","DownloadURL","FilePath")
 years_to_include <- c("2019","2020","2021")
 
 files_zipped_df <- files_zipped_df %>% 
-  filter(str_detect(Filename,paste(years_to_exclude,collapse = "|")))
+  filter(str_detect(Filename,paste(years_to_include,collapse = "|")))
 
  
 ###################################################################################################################
@@ -113,7 +113,7 @@ list_dt <- mget(ls(pattern = glob2rx("all_*")))
 
 MasterDT <- bind_rows(list_dt)
 
-rm(list_dt,dest_path,years_to_exclude)
+rm(list_dt,dest_path,years_to_include)
 
 rm(list = ls()[grepl("all_", ls())])
 
