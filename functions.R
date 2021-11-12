@@ -20,22 +20,6 @@ unzip_files <- function() {
   
 }
 
-## Organize files, extensions
-
-organise <- function() {
-  # Loop over each file in files_unzipped_df
-  for(i in 1:nrow(files_unzipped_df)) {
-    # check for blank extension
-    if (file_ext(files_unzipped_df[i,1])=="") {
-      # add .csv extension
-      file.rename(files_unzipped_df[i,1],paste(files_unzipped_df[i,1],"csv",sep="."))
-    }
-  }
-  # delete "__MACOSX" folder that comes from unzipping
-  unlink(paste(dest_path,"__MACOSX",sep="/"),recursive = TRUE)
-}
-  
-
 ## Load into R
 
 load_2019 <- function() {
@@ -112,12 +96,12 @@ add_new_columns <- function(dt) {
 
 ## Clean, preprocess, filter
 clean_preprocess <- function(dt) {
-  # Renaming to standardize member_casual, removing 'dependent'
+  # Renaming to standardize member_casual
   # Changing Ride_Time to numeric for calculations
   # Setting ordered levels for DayOfWeek and Month
   # Setting WeekDay_WeekEnd, member_casual as factor
   # Removing rows where start station id, end station id is na, ride_time is < 0, start station is "HQ QR"
   # Setting Day and Year as numeric
-  dt <- dt[.(member_casual=c("Subscriber","member"), to="Member"), on="member_casual",member_casual := i.to][.(member_casual=c("casual","Customer"), to="Casual"), on="member_casual",member_casual := i.to][member_casual!="Dependent"][, `:=` (Ride_Time = as.numeric(as.character(Ride_Time)))][, `:=` (DayOfWeek=ordered(DayOfWeek, levels=c("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat")))][, `:=` (Month=ordered(Month, levels=c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul","Aug","Sep","Oct","Nov","Dec")))][, `:=` (WeekDay_WeekEnd = as.factor(WeekDay_WeekEnd))][start_station_name != "HQ QR"][!(is.na(start_station_id))][!(is.na(end_station_id))][!(Ride_Time<0)][, `:=` (Day = as.numeric(as.character(Day)),Year = as.numeric(as.character(Year)),member_casual=as.factor(member_casual))]
+  dt <- dt[.(member_casual=c("Subscriber","member"), to="Member"), on="member_casual",member_casual := i.to][.(member_casual=c("casual","Customer"), to="Casual"), on="member_casual",member_casual := i.to][, `:=` (Ride_Time = as.numeric(as.character(Ride_Time)))][, `:=` (DayOfWeek=ordered(DayOfWeek, levels=c("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat")))][, `:=` (Month=ordered(Month, levels=c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul","Aug","Sep","Oct","Nov","Dec")))][, `:=` (WeekDay_WeekEnd = as.factor(WeekDay_WeekEnd))][start_station_name != "HQ QR"][!(is.na(start_station_id))][!(is.na(end_station_id))][!(Ride_Time<0)][, `:=` (Day = as.numeric(as.character(Day)),Year = as.numeric(as.character(Year)),member_casual=as.factor(member_casual))]
   return(dt)
 }

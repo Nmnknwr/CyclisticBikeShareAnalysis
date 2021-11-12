@@ -3,7 +3,6 @@ title: "Case Study : Bike Rentals Analysis - Cyclistic (Divvy Bikes)"
 author: "Naman Kanwar"
 output:
   html_document: default
-  pdf_document: default
 ---
 ```{r, setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -89,11 +88,11 @@ years_to_include <- c("2019","2020","2021")
 files_zipped_df <- files_zipped_df %>% 
   filter(str_detect(Filename,paste(years_to_include,collapse = "|")))
 
-k <- kable(files_zipped_df,format="html")
-
-column_spec(k,1:3,border_left = T, border_right = T) %>% 
-  kable_styling()
+kable(files_zipped_df,"html",booktabs = T) %>% 
+  kable_styling() %>% 
+  scroll_box(width="100%", height = "500px")
 ```
+<p>&nbsp;</p>
 
 Now that we have a data frame containing all required file names and downloadURLs, we can loop over it and download the files. The function **"download()"** is written for this purpose, and is used in the below chunk
 
@@ -126,10 +125,9 @@ colnames(files_unzipped_df) <- c("FilePath")
 files_unzipped_df <- files_unzipped_df %>% 
   mutate(Filename = basename(FilePath))
 
-k <- kable(files_unzipped_df,format="html")
-
-column_spec(k,1:2,border_left = T, border_right = T) %>% 
-  kable_styling()
+kable(files_unzipped_df,"html",booktabs=T) %>% 
+  kable_styling() %>% 
+  scroll_box(width="100%", height = "500px")
 ```
 
 ```{r, delete-MACOSX-folder, message=FALSE, warning=FALSE, echo=FALSE}
@@ -209,7 +207,7 @@ We can see that we quite a good number of records, and that the data is in prett
 MasterDT[,.N,by=member_casual]
 ```
 
-* We can see we will need to do some cleaning here, change "Subscriber" & "member"  to "Member" and "casual" & "Customer" to "Casual". Also remove "Dependents". We should also change it to factor data type.
+* We can see we will need to do some cleaning here, change "Subscriber" & "member"  to "Member" and "casual" & "Customer" to "Casual". We should also change it to factor data type.
 * **Ride_Time** column has values in negative, which doesn't make sense, so we would need to remove those rows. Also change the data type to numeric in order to do calculations on it.
 * **Day** and **Year** columns can be changed to numeric type.
 * **Month** and **DayOfWeek** columns can be made into factor types with ordered levels.
