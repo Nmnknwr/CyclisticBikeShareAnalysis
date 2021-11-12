@@ -24,7 +24,6 @@ library("stringr")
 library("dplyr")
 library("pbapply")
 library("xfun")
-library("broom")
 library("skimr")
 
 source("functions.R")
@@ -346,7 +345,7 @@ Fav_station_Member <- Fav_stations %>%
 # Lets store bounding box coordinates for ggmap:
 bb <- c(
   left = -87.700424,
-  bottom = 41.790769,
+  bottom = 41.790769, 
   right = -87.554855,
   top = 41.990119
 )

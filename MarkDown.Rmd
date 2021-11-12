@@ -1,0 +1,211 @@
+---
+title: "Case Study : Bike Rentals Analysis - Cyclistic (Divvy Bikes)"
+author: "Naman Kanwar"
+output:
+  html_document: default
+  pdf_document: default
+---
+```{r, setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+<p>&nbsp;</p>
+# About The Company
+In 2016, Cyclistic launched a successful bike-share offering. Since then, the program has grown to a fleet of 5,824 bicycles that are geotracked and locked into a network of 692 stations across Chicago. The bikes can be unlocked from one station and returned to any other station in the system anytime.
+
+Until now, Cyclistic’s marketing strategy relied on building general awareness and appealing to broad consumer segments. One approach that helped make these things possible was the flexibility of its pricing plans: single-ride passes, full-day passes, and annual memberships. Customers who purchase single-ride or full-day passes are referred to as casual riders. Customers who purchase annual memberships are Cyclistic members.
+
+# Mission Statement
+Cyclistic’s finance analysts have concluded that annual members are much more profitable than casual riders. Although the pricing flexibility helps Cyclistic attract more customers, The company's director believes that maximizing the number of annual members will be key to future growth. Rather than creating a marketing campaign that targets all-new customers, the director believes there is a very good chance to convert casual riders into members.
+
+A clear goal has been set : **Design marketing strategies aimed at converting casual riders into annual members.**
+
+In order to do that, however, **we need to understand how the usage patterns of casual riders differ from members**. We will be using the company's historical data from January 2019 till October 2021 for this purpose (rather than just take last 12 months), as this would give us data covering pre-pandemic, mid-pandemic as well as a bit of post-pandemic time frames (later months of 2021).
+
+# The Data
+The data is public data from the company. It starts from the year 2013 until October 31st 2021 (updated monthly), there doesn't seem to be a fixed naming convention as the files are sometimes clubbed by quarter, or month, or the whole year and their names vary. The naming of the columns also changes and there are some columns added and deleted over the years. 
+
+Nevertheless the data seems to be in good condition and its first hand data collected by the company itself with lots of rows and with lots of useful variables.
+
+## Downloading the data
+The data resides in an AWS S3 bucket, [**HERE**](https://divvy-tripdata.s3.amazonaws.com/index.html). We will use the "**aws.s3**" package to download the required files from this bucket.
+
+The following code chunks perform the following actions -
+
+* Load required libraries and load the functions.R file
+* Create a data frame with the following details about the files to be downloaded -
+  + Filename
+  + DownloadURL
+  + FilePath
+  + Filter the data frame for files only from the years we want (2019, 2020, 2021 in this case)
+
+
+```{r, load-libraries-functions, echo=TRUE, message=FALSE, warning=FALSE}
+# Loading required libraries and functions.R file -
+library("tidyverse")
+library("ggplot2")
+library("lubridate")
+library("geosphere")
+library("gridExtra") 
+library("ggmap")
+library("data.table")
+library("XML")
+library("httr")
+library("stringi")
+library("aws.s3")
+library("stringr")
+library("dplyr")
+library("pbapply")
+library("xfun")
+library("skimr")
+
+# Loading the R script containing function definitions
+source("functions.R")
+```
+
+```{r, make-zipped-files-df,echo=TRUE,message=FALSE}
+# Define destination path - where the files should be downloaded
+dest_path <- "/Users/namankanwar/Case Studys/CyclisticBikeShareAnalysis/Data"
+
+# Create files data frame using get_bucket_df function in aws.s3 package, selecting only 1st column
+files_zipped_df <- get_bucket_df("divvy-tripdata")%>% 
+  filter(str_detect(Key,".zip")) %>% 
+  select(1)
+
+# Adding 2 columns - DownloadURL and Filepath to be downloaded
+files_zipped_df <- files_zipped_df %>% 
+  mutate(DownloadURL = paste("https://divvy-tripdata.s3.amazonaws.com",Key,sep="/"),
+         FilePath = paste(dest_path,Key,sep = "/"))
+
+# Setting column names
+colnames(files_zipped_df) <- c("Filename","DownloadURL","FilePath")
+
+# Can change years_to_include to include/exclude years
+years_to_include <- c("2019","2020","2021")
+
+# Filtering the files data frame to have files that have data only for the years mentioned in years_to_include
+files_zipped_df <- files_zipped_df %>% 
+  filter(str_detect(Filename,paste(years_to_include,collapse = "|")))
+
+head(files_zipped_df)
+```
+
+Now that we have a data frame containing all required file names and downloadURLs, we can loop over it and download the files. The function **"download()"** is written for this purpose, and is used in the below chunk
+
+```{r, download-files,echo=TRUE,message=FALSE,warning=FALSE}
+# Calling the defined download() function to download all filenames in the dataframe, from corresponding the downloadURL, to the corresponding file path
+download()
+```
+
+All the required files have been downloaded into the destination path defined. The function **"unzip_files()"** is written to unzip the files in the same directory, and delete the .zip files once the CSV's have been unzipped.
+
+```{r, unzip-files, message=FALSE, warning=FALSE, echo=TRUE}
+# Calling the defined unzip_all() function to unzip all files in the downloaded files directory and then delete the .zip files
+unzip_files()
+```
+
+We now need another data frame with details of the unzipped files. This will be used later for loading the files into R. The following code chunk will perform the below tasks -
+
+* Create a data frame with the following details about the unzipped files -
+  + Filename
+  + FilePath
+
+```{r, make-unzipped-files-df, message=FALSE, warning=FALSE, echo=TRUE}
+# Create data frame using as.data.frame and list.files functions
+files_unzipped_df <- as.data.frame(list.files(dest_path,recursive = TRUE,full.names = TRUE))
+
+# Renaming column header
+colnames(files_unzipped_df) <- c("FilePath")
+
+# Adding column with full file path
+files_unzipped_df <- files_unzipped_df %>% 
+  mutate(Filename = basename(FilePath))
+
+head(files_unzipped_df)
+```
+
+Upon inspection of the unzipped files, we can see that few files are missing a file extension. We will fix that and using the **"organise()"** function.
+
+```{r message=FALSE, warning=FALSE, unzip-files, echo=TRUE}
+# Calling the defined organise() function to fix any file extension issues
+organise()
+```
+
+Now that all our files have been downloaded, unzipped and files extensions fixed wherever required, lets update the unzipped files data frame with the latest data.
+
+```{r, update-unzipped-files-df, message=FALSE, warning=FALSE, echo=TRUE}
+# Create data frame using as.data.frame and list.files functions
+files_unzipped_df <- as.data.frame(list.files(dest_path,recursive = TRUE,full.names = TRUE))
+
+# Renaming column header
+colnames(files_unzipped_df) <- c("FilePath")
+
+# Adding column with full file path
+files_unzipped_df <- files_unzipped_df %>% 
+  mutate(Filename = basename(FilePath))
+
+head(files_unzipped_df)
+
+```
+
+## Loading the CSV files into R
+Two functions have been written for the purpose of loading all the files to R as **Data Tables** using **fread()** function from the **data.table** package along with the **bind_rows()** function -
+
+* load_2019() - Loads all CSV's for the year 2019 into a single data table **"all_2019"** and deletes the individual data tables that it was made from
+* load_2020_2021() - Loads all CSV's for the year 2020 and 2021 into a single data table **"all_2020_2021"** and deletes the individual data tables that it was made from.
+
+We also use the following arguments within the fread() function while importing the CSV's -
+
+* **col.names** - To specify the column headers.
+* **colClasses** - To specify the column datatype.
+* **drop** - To exclude certain columns.
+
+```{r, load-files, message=FALSE, warning=FALSE, echo=TRUE}
+# Load all 2019 files into data tables, combine all into a single "all_2019" data table, then delete individual data tables
+load_2019()
+
+head(all_2019)
+
+# Load all 2020 and 2021 files into data tables, combine all into a single "all_2020_2021" data table, then delete individual data tables
+load_2020_2021()
+
+head(all_2020_2021)
+```
+
+## Pre-processing, Cleaning and Adding New Columns
+
+We now have all our files loaded into 2 Data Tables, for 2019 and 2020+2021 respectively. Lets combine them into a single Data Table, named **MasterDT**, and work with that from here on. In order to free up some memory, lets also remove all other environment objects that are not required anymore.
+
+
+```{r, combine-into-single, message=FALSE, warning=FALSE, echo=TRUE}
+# Make list containing all_2019 and all_2020_2021
+list_dt <- mget(ls(pattern = glob2rx("all_*")))
+
+# Stack them using bind_rows
+MasterDT <- bind_rows(list_dt)
+head(MasterDT)
+
+# Delete objects not required anymore...free memory
+rm(list_dt,dest_path,years_to_include)
+rm(list = ls()[grepl("all_", ls())])
+rm(list = ls()[grepl("files", ls())])
+gc()
+```
+
+For the purposes of Analysis and Visualizations, we will need some additional columns -
+
+* Date - Date when the trip was started
+* Month - Month when the trip was started in  %b format (Eg: "Jan")
+* Year - Year when the trip was started in %Y format (Eg: "2021")
+* Day - Day when the trip was started in %d format (Eg: "01")
+* Day of Week - Day of the week when the trip started in %a format (Eg: "Wed")
+* Ride_time - Duration of the trip in minutes
+* WeekDay_WeekEnd - Whether it was a weekday (Mon-Fri) or a weekend (Sat-Sun)
+
+For all the above actions, a function named **add_new_columns()** has been written, which takes a data table as its arguement, and returns it after adding the new columns.
+
+```{r, add-columns, message=FALSE, warning=FALSE, echo=TRUE}
+MasterDT <- add_new_columns(MasterDT)
+```
+
+
+
