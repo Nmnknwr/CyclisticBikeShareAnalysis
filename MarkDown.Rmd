@@ -65,6 +65,8 @@ source("functions.R")
 ```{r, make-zipped-files-df,echo=TRUE,message=FALSE}
 # Define destination path - where the files should be downloaded
 dest_path <- "/Users/namankanwar/Case Studys/CyclisticBikeShareAnalysis/Data"
+#dest_path <- "I:/Work/Datasets/Cyclistic"
+
 
 # Create files data frame using get_bucket_df function in aws.s3 package, selecting only 1st column
 files_zipped_df <- get_bucket_df("divvy-tripdata")%>% 
