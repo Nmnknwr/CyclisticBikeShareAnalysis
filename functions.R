@@ -98,20 +98,26 @@ load_2020_2021 <- function() {
 ## Add new columns
 
 add_new_columns <- function(dt) {
-  dt$Date <- as.Date(dt$started_at)
-  dt$Month <- format(as.Date(dt$Date),"%b")
-  dt$Year <- format(as.Date(dt$Date),"%Y")
-  dt$Day <- format(as.Date(dt$Date),"%d")
-  dt$DayOfWeek <- format(as.Date(dt$Date),"%a") 
-  dt$Ride_Time <- difftime(dt$ended_at,dt$started_at)
+  dt$Date <- as.Date(dt$started_at) #Date
+  dt$Month <- format(as.Date(dt$Date),"%b") #Month
+  dt$Year <- format(as.Date(dt$Date),"%Y") #Year
+  dt$Day <- format(as.Date(dt$Date),"%d") #Day
+  dt$DayOfWeek <- format(as.Date(dt$Date),"%a") #Day of the week
+  dt$Ride_Time <- difftime(dt$ended_at,dt$started_at) #Ride_time
   dt <- dt %>% 
-    mutate(WeekDay_WeekEnd = case_when(DayOfWeek == "Sat" | DayOfWeek == "Sun" ~ "Weekend",TRUE ~ "Weekday"))
+    mutate(WeekDay_WeekEnd = case_when(DayOfWeek == "Sat" | DayOfWeek == "Sun" ~ "Weekend",TRUE ~ "Weekday")) #Weekday or Weekend
   
   return(dt)
 }
 
 ## Clean, preprocess, filter
 clean_preprocess <- function(dt) {
+  # Renaming to standardize member_casual, removing 'dependent'
+  # Changing Ride_Time to numeric for calculations
+  # Setting ordered levels for DayOfWeek and Month
+  # Setting WeekDay_WeekEnd, member_casual as factor
+  # Removing rows where start station id, end station id is na, ride_time is < 0, start station is "HQ QR"
+  # Setting Day and Year as numeric
   dt <- dt[.(member_casual=c("Subscriber","member"), to="Member"), on="member_casual",member_casual := i.to][.(member_casual=c("casual","Customer"), to="Casual"), on="member_casual",member_casual := i.to][member_casual!="Dependent"][, `:=` (Ride_Time = as.numeric(as.character(Ride_Time)))][, `:=` (DayOfWeek=ordered(DayOfWeek, levels=c("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat")))][, `:=` (Month=ordered(Month, levels=c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul","Aug","Sep","Oct","Nov","Dec")))][, `:=` (WeekDay_WeekEnd = as.factor(WeekDay_WeekEnd))][start_station_name != "HQ QR"][!(is.na(start_station_id))][!(is.na(end_station_id))][!(Ride_Time<0)][, `:=` (Day = as.numeric(as.character(Day)),Year = as.numeric(as.character(Year)),member_casual=as.factor(member_casual))]
   return(dt)
 }

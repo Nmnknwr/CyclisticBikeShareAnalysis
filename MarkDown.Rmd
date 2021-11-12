@@ -57,7 +57,8 @@ library("dplyr")
 library("pbapply")
 library("xfun")
 library("skimr")
-
+library("knitr")
+library("kableExtra")
 # Loading the R script containing function definitions
 source("functions.R")
 ```
@@ -65,6 +66,8 @@ source("functions.R")
 ```{r, make-zipped-files-df,echo=TRUE,message=FALSE}
 # Define destination path - where the files should be downloaded
 dest_path <- "/Users/namankanwar/Case Studys/CyclisticBikeShareAnalysis/Data"
+#dest_path <- "I:/Work/Datasets/Cyclistic"
+
 
 # Create files data frame using get_bucket_df function in aws.s3 package, selecting only 1st column
 files_zipped_df <- get_bucket_df("divvy-tripdata")%>% 
@@ -86,7 +89,10 @@ years_to_include <- c("2019","2020","2021")
 files_zipped_df <- files_zipped_df %>% 
   filter(str_detect(Filename,paste(years_to_include,collapse = "|")))
 
-head(files_zipped_df)
+k <- kable(files_zipped_df,format="html")
+
+column_spec(k,1:3,border_left = T, border_right = T) %>% 
+  kable_styling()
 ```
 
 Now that we have a data frame containing all required file names and downloadURLs, we can loop over it and download the files. The function **"download()"** is written for this purpose, and is used in the below chunk
@@ -120,38 +126,21 @@ colnames(files_unzipped_df) <- c("FilePath")
 files_unzipped_df <- files_unzipped_df %>% 
   mutate(Filename = basename(FilePath))
 
-head(files_unzipped_df)
+k <- kable(files_unzipped_df,format="html")
+
+column_spec(k,1:2,border_left = T, border_right = T) %>% 
+  kable_styling()
 ```
 
-Upon inspection of the unzipped files, we can see that few files are missing a file extension. We will fix that and using the **"organise()"** function.
-
-```{r message=FALSE, warning=FALSE, unzip-files, echo=TRUE}
-# Calling the defined organise() function to fix any file extension issues
-organise()
-```
-
-Now that all our files have been downloaded, unzipped and files extensions fixed wherever required, lets update the unzipped files data frame with the latest data.
-
-```{r, update-unzipped-files-df, message=FALSE, warning=FALSE, echo=TRUE}
-# Create data frame using as.data.frame and list.files functions
-files_unzipped_df <- as.data.frame(list.files(dest_path,recursive = TRUE,full.names = TRUE))
-
-# Renaming column header
-colnames(files_unzipped_df) <- c("FilePath")
-
-# Adding column with full file path
-files_unzipped_df <- files_unzipped_df %>% 
-  mutate(Filename = basename(FilePath))
-
-head(files_unzipped_df)
-
+```{r, delete-MACOSX-folder, message=FALSE, warning=FALSE, echo=FALSE}
+unlink(paste(dest_path,"__MACOSX",sep="/"),recursive = TRUE)
 ```
 
 ## Loading the CSV files into R
 Two functions have been written for the purpose of loading all the files to R as **Data Tables** using **fread()** function from the **data.table** package along with the **bind_rows()** function -
 
-* load_2019() - Loads all CSV's for the year 2019 into a single data table **"all_2019"** and deletes the individual data tables that it was made from
-* load_2020_2021() - Loads all CSV's for the year 2020 and 2021 into a single data table **"all_2020_2021"** and deletes the individual data tables that it was made from.
+* **load_2019()** - Loads all CSV's for the year 2019 into a single data table **"all_2019"** and deletes the individual data tables that it was made from
+* **load_2020_2021()** - Loads all CSV's for the year 2020 and 2021 into a single data table **"all_2020_2021"** and deletes the individual data tables that it was made from.
 
 We also use the following arguments within the fread() function while importing the CSV's -
 
@@ -159,19 +148,19 @@ We also use the following arguments within the fread() function while importing 
 * **colClasses** - To specify the column datatype.
 * **drop** - To exclude certain columns.
 
-```{r, load-files, message=FALSE, warning=FALSE, echo=TRUE}
+```{r, load-files, message=FALSE, warning=FALSE, echo=TRUE,render = knitr::normal_print}
 # Load all 2019 files into data tables, combine all into a single "all_2019" data table, then delete individual data tables
 load_2019()
 
-head(all_2019)
+skim(all_2019)
 
 # Load all 2020 and 2021 files into data tables, combine all into a single "all_2020_2021" data table, then delete individual data tables
 load_2020_2021()
 
-head(all_2020_2021)
+skim(all_2020_2021)
 ```
 
-## Pre-processing, Cleaning and Adding New Columns
+## Combine, Add New Columns, Initial EDA, Clean/Pre-process
 
 We now have all our files loaded into 2 Data Tables, for 2019 and 2020+2021 respectively. Lets combine them into a single Data Table, named **MasterDT**, and work with that from here on. In order to free up some memory, lets also remove all other environment objects that are not required anymore.
 
@@ -182,7 +171,6 @@ list_dt <- mget(ls(pattern = glob2rx("all_*")))
 
 # Stack them using bind_rows
 MasterDT <- bind_rows(list_dt)
-head(MasterDT)
 
 # Delete objects not required anymore...free memory
 rm(list_dt,dest_path,years_to_include)
@@ -193,19 +181,54 @@ gc()
 
 For the purposes of Analysis and Visualizations, we will need some additional columns -
 
-* Date - Date when the trip was started
-* Month - Month when the trip was started in  %b format (Eg: "Jan")
-* Year - Year when the trip was started in %Y format (Eg: "2021")
-* Day - Day when the trip was started in %d format (Eg: "01")
-* Day of Week - Day of the week when the trip started in %a format (Eg: "Wed")
-* Ride_time - Duration of the trip in minutes
-* WeekDay_WeekEnd - Whether it was a weekday (Mon-Fri) or a weekend (Sat-Sun)
+* **Date** - Date when the trip was started
+* **Month** - Month when the trip was started in  %b format (Eg: "Jan")
+* **Year** - Year when the trip was started in %Y format (Eg: "2021")
+* **Day** - Day when the trip was started in %d format (Eg: "01")
+* **Day of Week** - Day of the week when the trip started in %a format (Eg: "Wed")
+* **Ride_Time** - Duration of the trip in seconds
+* **WeekDay_WeekEnd** - Whether it was a weekday (Mon-Fri) or a weekend (Sat-Sun)
 
-For all the above actions, a function named **add_new_columns()** has been written, which takes a data table as its arguement, and returns it after adding the new columns.
+To add them into our Data Table, a function named **add_new_columns()** has been written, which takes a data table as its argument, and returns it after adding the new columns.
 
 ```{r, add-columns, message=FALSE, warning=FALSE, echo=TRUE}
 MasterDT <- add_new_columns(MasterDT)
 ```
 
+Lets look at MasterDT and do a bit of initial exploratory data analysis to see what and where we need to clean
+
+```{r,initial-EDA, message=TRUE, warning=FALSE, echo=TRUE, render = knitr::normal_print}
+skim(MasterDT)
+```
+
+We can see that we quite a good number of records, and that the data is in pretty good shape. There are some more changes to be done though, as listed below - 
+
+* Looking at **member_casual** column, there are 4 unique values as shown above, but we know there should be two - **"Member"** and **"Casual"**. Lets inspect that column further -
+
+```{r,member-casual, message=TRUE, warning=FALSE, echo=TRUE}
+MasterDT[,.N,by=member_casual]
+```
+
+* We can see we will need to do some cleaning here, change "Subscriber" & "member"  to "Member" and "casual" & "Customer" to "Casual". Also remove "Dependents". We should also change it to factor data type.
+* **Ride_Time** column has values in negative, which doesn't make sense, so we would need to remove those rows. Also change the data type to numeric in order to do calculations on it.
+* **Day** and **Year** columns can be changed to numeric type.
+* **Month** and **DayOfWeek** columns can be made into factor types with ordered levels.
+* **WeekDay_WeekEnd** column can be changed to factor type.
+* Remove rows where start_station is "HQ QR" as these were rides taken for testing purposes.
+
+To perform the above steps, a function named **clean_preprocess()** has been written, which takes a data table as its argument, and returns it after making the changes.
+
+```{r, clean-preprocess, message=FALSE, warning=FALSE, echo=TRUE, render = knitr::normal_print}
+MasterDT <- clean_preprocess(MasterDT)
+
+MasterDT[,.N,by=member_casual]
+
+skim(MasterDT)
+```
+
+All looks good now! Lets dig in!
+
+
+# The Story
 
 
