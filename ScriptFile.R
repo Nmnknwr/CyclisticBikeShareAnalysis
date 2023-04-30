@@ -25,6 +25,7 @@ library("dplyr")
 library("pbapply")
 library("xfun")
 library("skimr")
+library("xts")
 
 source("functions.R")
 
@@ -52,7 +53,7 @@ files_zipped_df <- files_zipped_df %>%
 
 colnames(files_zipped_df) <- c("Filename","DownloadURL","FilePath")
 
-years_to_include <- c("2019","2020","2021")
+years_to_include <- c("2019","2020","2021","2022")
 
 files_zipped_df <- files_zipped_df %>% 
   filter(str_detect(Filename,paste(years_to_include,collapse = "|")))
@@ -135,15 +136,44 @@ MasterDT <- clean_preprocess(MasterDT)
 ###################################################################################################################
 ###################################################################################################################
 
-### Analyze 
+##### Analyze 
 
 
-## Tables/counts
 
-# Count of rides, Average ride duration - per customer type - overall
+### Tables/plots
+
+## Daily count of rides over time per customer type - seasonality
+
+MasterDT[,.(Rides=.N),by=.(Date,member_casual)] %>% 
+  ggplot(aes(x=Date,y=Rides,group=member_casual,color=member_casual)) +
+  geom_line() 
+
+## Daily avg ride time, over time per customer type - seasonality
+
+MasterDT[,.(AvgRideTime=mean(Ride_Time)/60),by=.(Date,member_casual)] %>% 
+  ggplot(aes(x=Date,y=AvgRideTime,group=member_casual,color=member_casual)) +
+  geom_line() 
+
+## Count of rides, Average ride duration - per customer type - overall
+
+(tbl <- MasterDT[start_lng != end_lng & start_lat != end_lat,.(CountOfRides = .N,Avg_Ride_Time = mean(Ride_Time)/60),by=member_casual])
+
+# Bar chart for Count of rides overall per customer type
+tbl %>% 
+  ggplot() + 
+  geom_col(aes(x=member_casual,y=CountOfRides,fill=member_casual), show.legend = FALSE) +
+  labs(title = "Count of Rides by User Type",x="User Type",y="Count of Rides")
+
+# Bar chart of Avg Ride Time overall per customer type
+tbl %>% 
+  ggplot() + 
+  geom_col(aes(x=member_casual,y=Avg_Ride_Time,fill=member_casual), show.legend = FALSE) +
+  labs(title = "Avg Ride Time by User Type",x="User Type",y="Avg Ride Time(min)")
 
 
-MasterDT[start_lng != end_lng & start_lat != end_lat,.(Rides = .N,Avg_Ride_time = mean(Ride_Time)/60),by=member_casual]
+
+
+
 
 
 # Count of rides, Average ride duration - per customer type - per day of the week
@@ -196,23 +226,6 @@ MasterDT[,.(Member_Ride_Share = round((sum(member_casual=="Member"))/.N*100,0),
 
 
 # Plots
-
-# Count of rides per customer type over time - line -- shows seasonality
-
-MasterDT[,.(Rides=.N),by=.(Date,member_casual)] %>% 
-  ggplot(aes(x=Date,y=Rides,group=member_casual,color=member_casual)) +
-  geom_line() 
-
-
-# Avg ride time per customer type overall
-
-MasterDT[start_lng != end_lng & start_lat != end_lat,
-         .(rides = .N,
-           avg_ride_time = mean(Ride_Time, na.rm = TRUE)),
-         by=.(member_casual)] %>% 
-  ggplot() + 
-  geom_col(aes(x=member_casual,y=avg_ride_time/60,fill=member_casual), show.legend = FALSE) +
-  labs(title = "Avg ride time by User type",x="User Type",y="Avg time in mins")
 
 # Count of rides - per customer type per day of week - line graph with points
 
